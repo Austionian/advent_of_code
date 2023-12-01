@@ -1,0 +1,12 @@
+[package]
+name = "aoc2020"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "aoc2020"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0.69"
+regex = "1.7.1"
