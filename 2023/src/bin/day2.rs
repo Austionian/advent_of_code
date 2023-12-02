@@ -67,29 +67,20 @@ fn transform_part_one(game: Game) -> u32 {
     game.id
 }
 
-fn part_one() -> anyhow::Result<u32> {
-    Ok(parse_and_transform(
-        "data/two.input".into(),
-        transform_part_one,
-    )?)
-}
-
 fn transform_part_two(game: Game) -> u32 {
     game.high_red * game.high_blue * game.high_green
 }
 
-fn part_two() -> anyhow::Result<u32> {
-    Ok(parse_and_transform(
-        "data/two.input".into(),
-        transform_part_two,
-    )?)
-}
-
 fn main() -> anyhow::Result<()> {
-    let res = part_one()?;
-    println!("Part One: {res}");
+    println!(
+        "Part One: {}",
+        parse_and_transform("data/two.input".into(), transform_part_one)?
+    );
 
-    let res = part_two()?;
-    println!("Part Two: {res}");
+    println!(
+        "Part Two: {}",
+        parse_and_transform("data/two.input".into(), transform_part_two)?
+    );
+
     Ok(())
 }
