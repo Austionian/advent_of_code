@@ -8,15 +8,7 @@ fn parse_layer(s: &str) -> Vec<u32> {
     s.chars().map(|c| c.to_digit(10).unwrap()).collect()
 }
 
-fn main() -> anyhow::Result<()> {
-    let image = fs::read_to_string("data/day8.input")?;
-    let mut cursor = 0;
-    let mut layers = Vec::new();
-    while cursor + AREA < image.len() {
-        layers.push(parse_layer(&image[cursor..cursor + AREA]));
-        cursor += AREA;
-    }
-
+fn part_one(layers: &Vec<Vec<u32>>) -> anyhow::Result<(u32, u32)> {
     let zeros = layers
         .iter()
         .enumerate()
@@ -34,7 +26,6 @@ fn main() -> anyhow::Result<()> {
 
     let mut ones = 0;
     let mut twos = 0;
-
     layers[zeros.0].iter().for_each(|n| {
         if n == &1 {
             ones += 1;
@@ -44,13 +35,15 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
-    println!("Part One: {}", ones * twos);
+    Ok((ones, twos))
+}
 
+fn part_two(layers: &Vec<Vec<u32>>) {
     let mut final_image = Vec::new();
 
     let mut cursor = 0;
     while cursor < AREA {
-        for layer in &layers {
+        for layer in layers {
             if layer[cursor] == 2 {
                 continue;
             }
@@ -61,8 +54,6 @@ fn main() -> anyhow::Result<()> {
     }
 
     let mut cursor = 0;
-
-    println!("Part Two:");
     while cursor < final_image.len() {
         let line = &final_image[cursor..cursor + LENGTH]
             .iter()
@@ -71,6 +62,22 @@ fn main() -> anyhow::Result<()> {
         println!("{line}");
         cursor += LENGTH;
     }
+}
+
+fn main() -> anyhow::Result<()> {
+    let image = fs::read_to_string("data/day8.input")?;
+    let mut cursor = 0;
+    let mut layers = Vec::new();
+    while cursor + AREA < image.len() {
+        layers.push(parse_layer(&image[cursor..cursor + AREA]));
+        cursor += AREA;
+    }
+
+    let (ones, twos) = part_one(&layers)?;
+
+    println!("Part One: {}", ones * twos);
+    println!("Part Two:");
+    part_two(&layers);
 
     Ok(())
 }
