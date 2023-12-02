@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use aoc::parse_lines;
+use aoc::parse_and_transform;
 use std::cell::RefCell;
 use std::str::FromStr;
 
@@ -60,23 +60,29 @@ const RED: u32 = 12;
 const GREEN: u32 = 13;
 const BLUE: u32 = 14;
 
+fn transform_part_one(game: Game) -> u32 {
+    if game.high_red > RED || game.high_green > GREEN || game.high_blue > BLUE {
+        return 0;
+    }
+    game.id
+}
+
 fn part_one() -> anyhow::Result<u32> {
-    Ok(parse_lines::<Game>("data/two.input".into())?
-        .iter()
-        .filter_map(|g| {
-            if g.high_red > RED || g.high_green > GREEN || g.high_blue > BLUE {
-                return None;
-            }
-            Some(g.id)
-        })
-        .sum())
+    Ok(parse_and_transform(
+        "data/two.input".into(),
+        transform_part_one,
+    )?)
+}
+
+fn transform_part_two(game: Game) -> u32 {
+    game.high_red * game.high_blue * game.high_green
 }
 
 fn part_two() -> anyhow::Result<u32> {
-    Ok(parse_lines::<Game>("data/two.input".into())?
-        .iter()
-        .map(|g| g.high_red * g.high_blue * g.high_green)
-        .sum())
+    Ok(parse_and_transform(
+        "data/two.input".into(),
+        transform_part_two,
+    )?)
 }
 
 fn main() -> anyhow::Result<()> {
