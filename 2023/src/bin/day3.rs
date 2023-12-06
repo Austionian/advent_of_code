@@ -1,9 +1,14 @@
 use aoc::parse_lines;
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
 #[derive(Debug)]
 struct Line(Vec<bool>);
-struct LinePartTwo(Vec<bool>);
+
+#[derive(Debug)]
+struct Num {
+    value: u32,
+    locations: HashSet<(usize, usize)>,
+}
 
 impl FromStr for Line {
     type Err = anyhow::Error;
@@ -20,14 +25,6 @@ impl FromStr for Line {
                 })
                 .collect(),
         ))
-    }
-}
-
-impl FromStr for LinePartTwo {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(LinePartTwo(s.trim().chars().map(|c| c == '*').collect()))
     }
 }
 
@@ -51,6 +48,85 @@ fn parse_line_to_vec(s: &str) -> Vec<String> {
         temp_vec.push(temp_str);
     }
     temp_vec
+}
+
+fn get_surrounding_location(len: usize, x: usize, y: usize) -> HashSet<(usize, usize)> {
+    let mut set = HashSet::new();
+
+    if x > 0 && y > 0 {
+        set.insert((x - 1, y - 1));
+    }
+    if x > 0 {
+        set.insert((x - 1, y + 1));
+
+        set.insert((x - 1, y));
+    }
+
+    set.insert((x + len, y));
+    if y > 0 {
+        for i in x..x + len + 1 {
+            set.insert((i, y - 1));
+        }
+    };
+
+    for i in x..x + len + 1 {
+        set.insert((i, y + 1));
+    }
+
+    set
+}
+
+fn part_two() -> anyhow::Result<u32> {
+    let nums = include_str!("../../data/three.input")
+        .lines()
+        .enumerate()
+        .flat_map(|(y, line)| {
+            let parsed = parse_line_to_vec(line);
+            let mut x = 0;
+            parsed
+                .iter()
+                .filter_map(|v| {
+                    let y = y.clone();
+                    if v.parse::<u32>().is_ok() {
+                        let locations = get_surrounding_location(v.len(), x, y);
+                        x += v.len();
+                        return Some(Num {
+                            value: v.clone().parse::<u32>().unwrap(),
+                            locations,
+                        });
+                    }
+                    x += 1;
+                    None
+                })
+                .collect::<Vec<Num>>()
+        })
+        .collect::<Vec<_>>();
+
+    Ok(include_str!("../../data/three.input")
+        .lines()
+        .enumerate()
+        .map(|(y, line)| {
+            line.chars()
+                .enumerate()
+                .map(|(x, c)| {
+                    if c == '*' {
+                        let mut values = (0, 0);
+                        for num in &nums {
+                            if num.locations.contains(&(x, y)) {
+                                if values.0 == 0 {
+                                    values.0 = num.value;
+                                } else {
+                                    values.1 = num.value;
+                                }
+                            }
+                        }
+                        return values.0 * values.1;
+                    }
+                    0
+                })
+                .sum::<u32>()
+        })
+        .sum::<u32>())
 }
 
 fn part_one() -> anyhow::Result<u32> {
@@ -134,15 +210,13 @@ fn part_one() -> anyhow::Result<u32> {
         });
     Ok(data)
 }
-//
-// fn part_two() -> anyhow::Result<u32> {
-//     let symbols = parse_lines::<LinePartTwo>("data/three.input".into())?;
-//     for (i, symbol) in symbols {}
-//     Ok(0)
-// }
 
 fn main() -> anyhow::Result<()> {
     let res = part_one()?;
     println!("Part One: {res}");
+
+    let res = part_two()?;
+    println!("Part Two: {res}");
+
     Ok(())
 }
