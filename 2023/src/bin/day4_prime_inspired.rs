@@ -1,33 +1,9 @@
+mod day4;
+
 use anyhow::{anyhow, Result};
 use aoc::parse_lines;
-use std::{collections::HashMap, collections::HashSet, str::FromStr};
-
-#[derive(Debug, Clone)]
-struct Game(u32);
-
-impl FromStr for Game {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (_, numbers) = s.trim().split_once(":").unwrap();
-        let (winning, mine) = numbers.trim().split_once("|").unwrap();
-        let winning = winning
-            .split_whitespace()
-            .filter_map(|n| n.parse::<u8>().ok())
-            .collect::<HashSet<_>>();
-
-        Ok(Game(
-            mine.split_whitespace()
-                .filter_map(|n| n.parse::<u8>().ok())
-                .fold(0, |acc, n| {
-                    if winning.contains(&n) {
-                        return acc + 1;
-                    }
-                    acc
-                }),
-        ))
-    }
-}
+use day4::Game;
+use std::collections::HashMap;
 
 fn part_two() -> Result<usize> {
     let mut to_process = include_str!("../../data/four.input")

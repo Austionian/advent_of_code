@@ -2,7 +2,8 @@ use anyhow::Result;
 use aoc::parse_lines;
 use std::str::FromStr;
 
-struct Game(u32);
+#[derive(Debug, Clone)]
+pub(crate) struct Game(pub u32);
 
 impl FromStr for Game {
     type Err = anyhow::Error;
@@ -28,6 +29,7 @@ impl FromStr for Game {
     }
 }
 
+#[allow(dead_code)]
 fn part_one() -> Result<u32> {
     Ok(parse_lines::<Game>("data/four.input".into())?
         .iter()
@@ -39,6 +41,7 @@ fn part_one() -> Result<u32> {
         }))
 }
 
+#[allow(dead_code)]
 fn part_two() -> Result<usize> {
     let total_lines = include_str!("../../data/four.input")
         .lines()
@@ -60,6 +63,7 @@ fn part_two() -> Result<usize> {
     Ok(card_totals.iter().sum())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Part One: {}", part_one()?);
 
