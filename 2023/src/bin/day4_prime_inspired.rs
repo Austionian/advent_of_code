@@ -29,17 +29,6 @@ impl FromStr for Game {
     }
 }
 
-fn part_one() -> Result<u32> {
-    Ok(parse_lines::<Game>("data/four.input".into())?
-        .iter()
-        .fold(0, |acc, g| {
-            if g.0 >= 1 {
-                return acc + 2u32.pow(g.0 - 1);
-            }
-            acc
-        }))
-}
-
 fn part_two() -> Result<usize> {
     let mut to_process = include_str!("../../data/four.input")
         .lines()
@@ -66,8 +55,6 @@ fn part_two() -> Result<usize> {
 }
 
 fn main() -> Result<()> {
-    println!("Part One: {}", part_one()?);
-
     println!("Part Two: {}", part_two()?);
 
     Ok(())

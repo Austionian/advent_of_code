@@ -1,9 +1,5 @@
 use anyhow::Result;
 
-const INPUT: &str = r#"
-Time:      35  93  73 66
-Distance:  212 2060 1201 1044"#;
-
 fn totals(times: Vec<usize>, distances: Vec<usize>) -> Result<usize> {
     Ok(times.iter().enumerate().fold(1, |acc, (d, time)| {
         acc * (0..*time).filter(|i| i * (time - i) > distances[d]).count()
@@ -11,7 +7,10 @@ fn totals(times: Vec<usize>, distances: Vec<usize>) -> Result<usize> {
 }
 
 fn part_one() -> Result<usize> {
-    let (times, distances) = INPUT.trim().split_once('\n').unwrap();
+    let (times, distances) = include_str!("../../data/six.input")
+        .trim()
+        .split_once('\n')
+        .unwrap();
 
     let times = times
         .split_whitespace()
@@ -26,7 +25,10 @@ fn part_one() -> Result<usize> {
 }
 
 fn part_two() -> Result<usize> {
-    let (times, distances) = INPUT.trim().split_once('\n').unwrap();
+    let (times, distances) = include_str!("../../data/six.input")
+        .trim()
+        .split_once('\n')
+        .unwrap();
 
     let times = vec![times
         .split_once(':')

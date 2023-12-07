@@ -1,9 +1,8 @@
+use anyhow::Result;
+use aoc::parse_lines;
 use std::str::FromStr;
 
-struct Game {
-    winning: Vec<u8>,
-    mine: Vec<u8>,
-}
+struct Game(u32);
 
 impl FromStr for Game {
     type Err = anyhow::Error;
@@ -15,61 +14,56 @@ impl FromStr for Game {
             .split_whitespace()
             .filter_map(|n| n.parse::<u8>().ok())
             .collect::<Vec<_>>();
-        let mine = mine
-            .split_whitespace()
-            .filter_map(|n| n.parse::<u8>().ok())
-            .collect::<Vec<_>>();
 
-        Ok(Game { winning, mine })
+        Ok(Game(
+            mine.split_whitespace()
+                .filter_map(|n| n.parse::<u8>().ok())
+                .fold(0, |acc, n| {
+                    if winning.contains(&n) {
+                        return acc + 1;
+                    }
+                    acc
+                }),
+        ))
     }
 }
 
-fn main() {
-    let res = include_str!("../../data/four.input")
-        .lines()
-        .fold(0, |acc, line| {
-            let game = line.parse::<Game>().unwrap();
-            let number_of_matches = game.mine.iter().fold(0, |acc, n| {
-                if game.winning.contains(n) {
-                    return acc + 1;
-                }
-                acc
-            });
-            if number_of_matches >= 1 {
-                return acc + 2u32.pow(number_of_matches - 1);
+fn part_one() -> Result<u32> {
+    Ok(parse_lines::<Game>("data/four.input".into())?
+        .iter()
+        .fold(0, |acc, g| {
+            if g.0 >= 1 {
+                return acc + 2u32.pow(g.0 - 1);
             }
             acc
-        });
+        }))
+}
 
-    println!("Part One: {res}");
-
+fn part_two() -> Result<usize> {
     let total_lines = include_str!("../../data/four.input")
         .lines()
         .map(|_| 1)
         .sum::<usize>();
 
     let mut card_totals = vec![1; total_lines];
-    include_str!("../../data/four.input")
-        .lines()
+    parse_lines::<Game>("data/four.input".into())?
+        .iter()
         .enumerate()
-        .for_each(|(i, line)| {
-            let game = line.parse::<Game>().unwrap();
-
-            let number_of_matches = game.mine.iter().fold(0, |acc, n| {
-                if game.winning.contains(n) {
-                    return acc + 1;
-                }
-                acc
-            });
-
+        .for_each(|(i, game)| {
             for _ in 0..card_totals[i] {
-                for j in i + 1..i + number_of_matches + 1 {
+                for j in i + 1..i + game.0 as usize + 1 {
                     card_totals[j] += 1;
                 }
             }
         });
 
-    let res = card_totals.iter().sum::<usize>();
+    Ok(card_totals.iter().sum())
+}
 
-    println!("Part Two: {res}");
+fn main() -> Result<()> {
+    println!("Part One: {}", part_one()?);
+
+    println!("Part Two: {}", part_two()?);
+
+    Ok(())
 }
