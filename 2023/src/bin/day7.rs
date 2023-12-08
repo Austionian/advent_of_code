@@ -8,6 +8,29 @@ struct Game {
     bid: usize,
 }
 
+impl FromStr for Game {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (cards, bid) = s.split_once(" ").ok_or(anyhow!("No bid found"))?;
+
+        let mut hash: HashMap<char, u8> = HashMap::new();
+        cards.chars().for_each(|c| {
+            hash.entry(c).and_modify(|count| *count += 1).or_insert(1);
+        });
+
+        let cards = Cards {
+            strength: hash.into(),
+            raw_cards: cards.chars().map(|c| c.into()).collect(),
+        };
+
+        Ok(Game {
+            cards,
+            bid: bid.parse()?,
+        })
+    }
+}
+
 impl Ord for Game {
     fn cmp(&self, other: &Self) -> Ordering {
         if self.cards.strength > other.cards.strength {
@@ -17,14 +40,14 @@ impl Ord for Game {
             return Ordering::Less;
         }
 
-        let mut a_first = self.cards.cards_raw.chars();
-        let mut b_first = other.cards.cards_raw.chars();
+        let mut a_first = self.cards.raw_cards.iter();
+        let mut b_first = other.cards.raw_cards.iter();
         while let Some(c) = a_first.next() {
             let b_first = b_first.next().unwrap();
-            if get_first_card_worth(c) > get_first_card_worth(b_first) {
+            if c > b_first {
                 return Ordering::Greater;
             }
-            if get_first_card_worth(b_first) > get_first_card_worth(c) {
+            if b_first > c {
                 return Ordering::Less;
             }
         }
@@ -41,14 +64,14 @@ impl PartialOrd for Game {
             return Some(Ordering::Less);
         }
 
-        let mut a_first = self.cards.cards_raw.chars();
-        let mut b_first = other.cards.cards_raw.chars();
+        let mut a_first = self.cards.raw_cards.iter();
+        let mut b_first = other.cards.raw_cards.iter();
         while let Some(c) = a_first.next() {
             let b_first = b_first.next().unwrap();
-            if get_first_card_worth(c) > get_first_card_worth(b_first) {
+            if c > b_first {
                 return Some(Ordering::Greater);
             }
-            if get_first_card_worth(b_first) > get_first_card_worth(c) {
+            if b_first > c {
                 return Some(Ordering::Less);
             }
         }
@@ -56,10 +79,57 @@ impl PartialOrd for Game {
     }
 }
 
+type RawCards = Vec<Card>;
+
 #[derive(Debug, Eq, PartialEq)]
 struct Cards {
     strength: Strength,
-    cards_raw: String,
+    raw_cards: RawCards,
+}
+
+#[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
+enum Card {
+    JPartTwo,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    T,
+    J,
+    Q,
+    K,
+    A,
+}
+
+impl Into<Card> for char {
+    fn into(self) -> Card {
+        match self {
+            '2' => Card::Two,
+            '3' => Card::Three,
+            '4' => Card::Four,
+            '5' => Card::Five,
+            '6' => Card::Six,
+            '7' => Card::Seven,
+            '8' => Card::Eight,
+            '9' => Card::Nine,
+            'T' => Card::T,
+            'J' => unsafe {
+                return match &RULES {
+                    Some(Rule::PartOne) => Card::J,
+                    Some(Rule::PartTwo) => Card::JPartTwo,
+                    None => unreachable!("There should always be a rule set!"),
+                };
+            },
+            'Q' => Card::Q,
+            'K' => Card::K,
+            'A' => Card::A,
+            _ => unreachable!("Invalid card found!"),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
@@ -73,96 +143,56 @@ enum Strength {
     FiveOfAKind,
 }
 
-fn get_strength(hash: HashMap<char, u8>, cards: &str) -> Strength {
-    let rule = unsafe { &RULES.clone() };
-    let mut modifier = &0;
-    if cards.contains('J') && rule == &Some(Rule::PartTwo) {
-        modifier = hash.get(&'J').unwrap();
-    }
-    let mut sorted = hash.iter().collect::<Vec<_>>();
-    sorted.sort_by(|a, b| b.1.cmp(a.1));
+impl Into<Strength> for HashMap<char, u8> {
+    fn into(self) -> Strength {
+        let rule = unsafe { &RULES.clone() };
+        let mut modifier = &0;
+        if self.get_key_value(&'J').is_some() && rule == &Some(Rule::PartTwo) {
+            modifier = self.get(&'J').unwrap();
+        }
+        let mut sorted = self.iter().collect::<Vec<_>>();
+        sorted.sort_by(|a, b| b.1.cmp(a.1));
 
-    // could be a five of a kind with the same chars
-    if sorted.len() == 1 {
-        return Strength::FiveOfAKind;
-    }
-
-    let mut highest = sorted[0];
-    let mut second = sorted[1];
-
-    if highest.0 == &'J' && rule == &Some(Rule::PartTwo) {
-        if sorted.len() > 2 {
-            highest = sorted[1];
-            second = sorted[2];
-        } else {
-            // if only two, five of a kind incoming.
+        // could be a five of a kind with the same chars
+        if sorted.len() == 1 {
             return Strength::FiveOfAKind;
         }
-    }
 
-    if highest.1 + modifier == 5 {
-        return Strength::FiveOfAKind;
-    }
-    if highest.1 + modifier == 4 {
-        return Strength::FourOfAKind;
-    }
-    if (highest.1 + modifier == 3 && second.1 == &2)
-        || (highest.1 == &3 && second.1 + modifier == 2)
-    {
-        return Strength::FullHouse;
-    }
-    if highest.1 + modifier == 3 {
-        return Strength::ThreeOfAKind;
-    }
-    if highest.1 == &2 && second.1 + modifier == 2 {
-        return Strength::TwoPair;
-    }
-    if highest.1 + modifier == 2 {
-        return Strength::OnePair;
-    }
+        let mut highest = sorted[0];
+        let mut second = sorted[1];
 
-    Strength::HighCard
-}
-
-impl FromStr for Game {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (cards, bid) = s.split_once(" ").ok_or(anyhow!("No bid found"))?;
-
-        let mut hash: HashMap<char, u8> = HashMap::new();
-        cards.chars().for_each(|c| {
-            hash.entry(c).and_modify(|count| *count += 1).or_insert(1);
-        });
-
-        let strength = get_strength(hash, &cards);
-
-        let cards = Cards {
-            strength,
-            cards_raw: cards.to_string(),
-        };
-
-        Ok(Game {
-            cards,
-            bid: bid.parse()?,
-        })
-    }
-}
-
-fn get_first_card_worth(c: char) -> u32 {
-    match c {
-        'A' => 13,
-        'K' => 12,
-        'Q' => 11,
-        'J' => unsafe {
-            match &RULES {
-                Some(Rule::PartOne) => 10,
-                Some(Rule::PartTwo) => 0,
-                _ => 0,
+        if highest.0 == &'J' && rule == &Some(Rule::PartTwo) {
+            if sorted.len() > 2 {
+                highest = sorted[1];
+                second = sorted[2];
+            } else {
+                // if only two, five of a kind incoming.
+                return Strength::FiveOfAKind;
             }
-        },
-        'T' => 9,
-        _ => c.to_digit(10).unwrap() - 1,
+        }
+
+        if highest.1 + modifier == 5 {
+            return Strength::FiveOfAKind;
+        }
+        if highest.1 + modifier == 4 {
+            return Strength::FourOfAKind;
+        }
+        if (highest.1 + modifier == 3 && second.1 == &2)
+            || (highest.1 == &3 && second.1 + modifier == 2)
+        {
+            return Strength::FullHouse;
+        }
+        if highest.1 + modifier == 3 {
+            return Strength::ThreeOfAKind;
+        }
+        if highest.1 == &2 && second.1 + modifier == 2 {
+            return Strength::TwoPair;
+        }
+        if highest.1 + modifier == 2 {
+            return Strength::OnePair;
+        }
+
+        Strength::HighCard
     }
 }
 
