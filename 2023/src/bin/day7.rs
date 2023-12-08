@@ -2,41 +2,75 @@ use anyhow::{anyhow, Result};
 use aoc::parse_lines;
 use std::{cmp::Ordering, collections::HashMap, str::FromStr};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 struct Game {
     cards: Cards,
     bid: usize,
 }
 
-#[derive(Debug)]
+impl Ord for Game {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.cards.strength > other.cards.strength {
+            return Ordering::Greater;
+        }
+        if self.cards.strength < other.cards.strength {
+            return Ordering::Less;
+        }
+
+        let mut a_first = self.cards.cards_raw.chars();
+        let mut b_first = other.cards.cards_raw.chars();
+        while let Some(c) = a_first.next() {
+            let b_first = b_first.next().unwrap();
+            if get_first_card_worth(c) > get_first_card_worth(b_first) {
+                return Ordering::Greater;
+            }
+            if get_first_card_worth(b_first) > get_first_card_worth(c) {
+                return Ordering::Less;
+            }
+        }
+        Ordering::Equal
+    }
+}
+
+impl PartialOrd for Game {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.cards.strength > other.cards.strength {
+            return Some(Ordering::Greater);
+        }
+        if self.cards.strength < other.cards.strength {
+            return Some(Ordering::Less);
+        }
+
+        let mut a_first = self.cards.cards_raw.chars();
+        let mut b_first = other.cards.cards_raw.chars();
+        while let Some(c) = a_first.next() {
+            let b_first = b_first.next().unwrap();
+            if get_first_card_worth(c) > get_first_card_worth(b_first) {
+                return Some(Ordering::Greater);
+            }
+            if get_first_card_worth(b_first) > get_first_card_worth(c) {
+                return Some(Ordering::Less);
+            }
+        }
+        Some(Ordering::Equal)
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
 struct Cards {
     strength: Strength,
     cards_raw: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 enum Strength {
-    FiveOfAKind,
-    FourOfAKind,
-    FullHouse,
-    ThreeOfAKind,
-    TwoPair,
-    OnePair,
     HighCard,
-}
-
-impl Strength {
-    fn get_worth(&self) -> usize {
-        match self {
-            Strength::FiveOfAKind => 6,
-            Strength::FourOfAKind => 5,
-            Strength::FullHouse => 4,
-            Strength::ThreeOfAKind => 3,
-            Strength::TwoPair => 2,
-            Strength::OnePair => 1,
-            Strength::HighCard => 0,
-        }
-    }
+    OnePair,
+    TwoPair,
+    ThreeOfAKind,
+    FullHouse,
+    FourOfAKind,
+    FiveOfAKind,
 }
 
 fn get_strength(hash: HashMap<char, u8>, cards: &str) -> Strength {
@@ -132,28 +166,6 @@ fn get_first_card_worth(c: char) -> u32 {
     }
 }
 
-fn sort_games(a: &Game, b: &Game) -> Ordering {
-    if a.cards.strength.get_worth() > b.cards.strength.get_worth() {
-        return Ordering::Greater;
-    }
-    if a.cards.strength.get_worth() < b.cards.strength.get_worth() {
-        return Ordering::Less;
-    }
-
-    let mut a_first = a.cards.cards_raw.chars();
-    let mut b_first = b.cards.cards_raw.chars();
-    while let Some(c) = a_first.next() {
-        let b_first = b_first.next().unwrap();
-        if get_first_card_worth(c) > get_first_card_worth(b_first) {
-            return Ordering::Greater;
-        }
-        if get_first_card_worth(b_first) > get_first_card_worth(c) {
-            return Ordering::Less;
-        }
-    }
-    Ordering::Equal
-}
-
 #[derive(PartialEq, Debug, Clone)]
 enum Rule {
     PartOne,
@@ -163,7 +175,7 @@ enum Rule {
 static mut RULES: Option<Rule> = None;
 
 fn sort_and_fold(mut games: Vec<Game>) -> usize {
-    games.sort_by(sort_games);
+    games.sort();
 
     games
         .iter()
@@ -175,14 +187,14 @@ fn main() -> Result<()> {
     unsafe {
         RULES = Some(Rule::PartOne);
     };
-    let games = parse_lines::<Game>("data/seven.test".into())?;
+    let games = parse_lines::<Game>("data/seven.input".into())?;
 
     println!("Part One: {}", sort_and_fold(games));
 
     unsafe {
         RULES = Some(Rule::PartTwo);
     };
-    let games = parse_lines::<Game>("data/seven.test".into())?;
+    let games = parse_lines::<Game>("data/seven.input".into())?;
 
     println!("Part Two: {}", sort_and_fold(games));
 
