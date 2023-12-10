@@ -1,82 +1,72 @@
 use anyhow::Result;
+use aoc::parse_lines;
+use std::str::FromStr;
 
-fn part_one() -> Result<isize> {
-    Ok(include_str!("../../data/nine.input")
-        .lines()
-        .map(|line| {
-            let mut col = Vec::new();
-            let values = line
-                .split_whitespace()
-                .filter_map(|num| num.parse::<isize>().ok())
+type ParsedHistory = Vec<Vec<isize>>;
+struct History(ParsedHistory);
+
+impl FromStr for History {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> std::prelude::v1::Result<Self, Self::Err> {
+        let mut col = Vec::new();
+        let values = s
+            .split_whitespace()
+            .filter_map(|num| num.parse::<isize>().ok())
+            .collect::<Vec<_>>();
+
+        col.push(values);
+
+        loop {
+            let mut temp_values = col.last().unwrap().clone();
+            temp_values = temp_values
+                .to_owned()
+                .windows(2)
+                .map(|slice| slice[1] - slice[0])
                 .collect::<Vec<_>>();
 
-            col.push(values.clone());
-
-            loop {
-                let mut temp_values = col.last().unwrap().clone();
-                temp_values = temp_values
-                    .to_owned()
-                    .windows(2)
-                    .map(|slice| slice[1] - slice[0])
-                    .collect::<Vec<_>>();
-
-                if temp_values.last() == Some(&0) || temp_values.len() == 0 {
-                    break;
-                }
-
-                col.push(temp_values.clone());
+            if temp_values.last() == Some(&0) || temp_values.len() == 0 {
+                break;
             }
 
+            col.push(temp_values);
+        }
+
+        Ok(History(col))
+    }
+}
+
+fn part_one() -> Result<isize> {
+    Ok(parse_lines::<History>("data/nine.input".into())?
+        .into_iter()
+        .map(|mut history| {
             let mut last = 0;
-            while col.len() > 0 {
-                last += col.pop().unwrap().last().unwrap();
+            while history.0.len() > 0 {
+                last += history.0.pop().unwrap().last().unwrap();
             }
 
             last
         })
-        .sum::<isize>())
+        .sum())
 }
 
 fn part_two() -> Result<isize> {
-    Ok(include_str!("../../data/nine.input")
-        .lines()
-        .map(|line| {
-            let mut col = Vec::new();
-            let values = line
-                .split_whitespace()
-                .filter_map(|num| num.parse::<isize>().ok())
-                .collect::<Vec<_>>();
-
-            col.push(values.clone());
-
-            loop {
-                let mut temp_values = col.last().unwrap().clone();
-                temp_values = temp_values
-                    .to_owned()
-                    .windows(2)
-                    .map(|slice| slice[1] - slice[0])
-                    .collect::<Vec<_>>();
-
-                if temp_values.last() == Some(&0) || temp_values.len() == 0 {
-                    break;
-                }
-
-                col.push(temp_values.clone());
-            }
-
-            let mut first = col.pop().unwrap().first().unwrap().clone();
-            while col.len() > 0 {
-                first = col.pop().unwrap().first().unwrap() - first;
+    Ok(parse_lines::<History>("data/nine.input".into())?
+        .into_iter()
+        .map(|mut history| {
+            let mut first = *history.0.pop().unwrap().first().unwrap();
+            while history.0.len() > 0 {
+                first = history.0.pop().unwrap().first().unwrap() - first;
             }
 
             first
         })
-        .sum::<isize>())
+        .sum())
 }
 
 fn main() -> Result<()> {
     println!("Part One: {}", part_one()?);
-    println!("Part Two: {:?}", part_two()?);
+    println!("Part Two: {}", part_two()?);
 
     Ok(())
 }
