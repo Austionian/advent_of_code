@@ -21,3 +21,14 @@ where
         .map(f)
         .sum())
 }
+
+#[macro_export]
+macro_rules! timing {
+    ( $x:expr ) => {{
+        use std::time::Instant;
+        let now = Instant::now();
+        $x;
+        let elapsed = now.elapsed();
+        println!("Elapsed: {:.2?}", elapsed);
+    }};
+}

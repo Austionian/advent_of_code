@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use aoc::timing;
 
 #[derive(Debug)]
 struct Map {
@@ -119,9 +120,9 @@ fn main() -> anyhow::Result<()> {
         .filter_map(|v| v.parse::<usize>().ok())
         .collect::<Vec<_>>();
 
-    println!("Part One: {}", part_one(&seeds, &rest)?);
+    timing!(println!("Part One: {}", part_one(&seeds, &rest)?));
 
-    println!("Part Two: {}", part_two(&seeds, &rest)?);
+    timing!(println!("Part Two: {}", part_two(&seeds, &rest)?));
 
     Ok(())
 }
