@@ -35,6 +35,15 @@ impl FromStr for Instruction {
     }
 }
 
+fn remove(v: &mut Vec<(String, usize)>, label: &str) {
+    for (i, t) in v.iter_mut().enumerate() {
+        if t.0 == label {
+            v.remove(i);
+            break;
+        }
+    }
+}
+
 impl Boxes {
     fn new() -> Self {
         Boxes(HashMap::with_capacity(256))
@@ -76,14 +85,7 @@ impl Boxes {
                 }
                 Ok(Instruction::Remove(label)) => {
                     let hash = hash(&label);
-                    self.0.entry(hash).and_modify(|v| {
-                        for (i, t) in v.iter_mut().enumerate() {
-                            if t.0 == label {
-                                v.remove(i);
-                                break;
-                            }
-                        }
-                    });
+                    self.0.entry(hash).and_modify(|v| remove(v, &label));
                 }
                 Err(e) => bail!("Unable to parse instruction: {}, err: {}", instruction, e),
             };
