@@ -25,8 +25,13 @@ impl FromStr for Instruction {
             let value = value.parse()?;
             return Ok(Instruction::AddOrUpdate(label.to_string(), value));
         }
-        let (label, _) = s.split_once('-').ok_or(anyhow!("No dash found!"))?;
-        Ok(Instruction::Remove(label.to_string()))
+
+        Ok(Instruction::Remove(
+            s.split('-')
+                .next()
+                .ok_or(anyhow!("No dash found!"))?
+                .to_string(),
+        ))
     }
 }
 
