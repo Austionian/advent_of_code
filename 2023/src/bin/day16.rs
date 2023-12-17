@@ -15,18 +15,6 @@ enum Dir {
     E,
     W,
 }
-//
-// impl Add for Position {
-//     type Output = Self;
-//
-//     fn add(self, rhs: Self) -> Self::Output {
-//         Position {
-//             x: self.x + rhs.x,
-//             y: self.y + rhs.y,
-//             dir: self.dir,
-//         }
-//     }
-// }
 
 impl Position {
     fn get_next(&mut self, height: usize, width: usize) -> Result<()> {
@@ -74,68 +62,277 @@ fn main() -> Result<()> {
     let height = layout.len();
     let width = layout[0].len();
 
-    let mut splits = vec![Position {
-        x: 0,
-        y: 0,
-        dir: Dir::E,
-    }];
-    let mut seen = HashSet::new();
-    let mut split_starts = HashSet::new();
-    while splits.len() > 0 {
-        let mut position = splits.pop().unwrap();
-        if !split_starts.insert(position.clone()) {
-            continue;
+    let mut max = 0;
+
+    for x in 0..width {
+        let mut splits = vec![Position {
+            x,
+            y: 0,
+            dir: Dir::S,
+        }];
+        let mut seen = HashSet::new();
+        let mut split_starts = HashSet::new();
+        while splits.len() > 0 {
+            let mut position = splits.pop().unwrap();
+            if !split_starts.insert(position.clone()) {
+                continue;
+            }
+            loop {
+                seen.insert((position.x, position.y));
+                match layout[position.y][position.x] {
+                    '.' => {}
+                    '|' => match position.dir {
+                        Dir::N | Dir::S => {}
+                        Dir::E | Dir::W => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::S,
+                            });
+
+                            position.dir = Dir::N;
+                        }
+                    },
+                    '-' => match position.dir {
+                        Dir::E | Dir::W => {}
+                        Dir::N | Dir::S => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::W,
+                            });
+
+                            position.dir = Dir::E;
+                        }
+                    },
+                    '\\' => match position.dir {
+                        Dir::E => position.dir = Dir::S,
+                        Dir::W => position.dir = Dir::N,
+                        Dir::S => position.dir = Dir::E,
+                        Dir::N => position.dir = Dir::W,
+                    },
+                    '/' => match position.dir {
+                        Dir::E => position.dir = Dir::N,
+                        Dir::W => position.dir = Dir::S,
+                        Dir::S => position.dir = Dir::W,
+                        Dir::N => position.dir = Dir::E,
+                    },
+                    _ => unreachable!("Invalid layout piece found!"),
+                };
+
+                if let Err(_) = position.get_next(height, width) {
+                    break;
+                };
+            }
         }
-        loop {
-            seen.insert((position.x, position.y));
-            match layout[position.y][position.x] {
-                '.' => {}
-                '|' => match position.dir {
-                    Dir::N | Dir::S => {}
-                    Dir::E | Dir::W => {
-                        splits.push(Position {
-                            x: position.x,
-                            y: position.y,
-                            dir: Dir::S,
-                        });
 
-                        position.dir = Dir::N;
-                    }
-                },
-                '-' => match position.dir {
-                    Dir::E | Dir::W => {}
-                    Dir::N | Dir::S => {
-                        splits.push(Position {
-                            x: position.x,
-                            y: position.y,
-                            dir: Dir::W,
-                        });
-
-                        position.dir = Dir::E;
-                    }
-                },
-                '\\' => match position.dir {
-                    Dir::E => position.dir = Dir::S,
-                    Dir::W => position.dir = Dir::N,
-                    Dir::S => position.dir = Dir::E,
-                    Dir::N => position.dir = Dir::W,
-                },
-                '/' => match position.dir {
-                    Dir::E => position.dir = Dir::N,
-                    Dir::W => position.dir = Dir::S,
-                    Dir::S => position.dir = Dir::W,
-                    Dir::N => position.dir = Dir::E,
-                },
-                _ => unreachable!("Invalid layout piece found!"),
-            };
-
-            if let Err(_) = position.get_next(height, width) {
-                break;
-            };
+        if seen.len() > max {
+            max = seen.len();
         }
     }
 
-    println!("{}", seen.len());
+    for x in 0..width {
+        let mut splits = vec![Position {
+            x,
+            y: height - 1,
+            dir: Dir::N,
+        }];
+        let mut seen = HashSet::new();
+        let mut split_starts = HashSet::new();
+        while splits.len() > 0 {
+            let mut position = splits.pop().unwrap();
+            if !split_starts.insert(position.clone()) {
+                continue;
+            }
+            loop {
+                seen.insert((position.x, position.y));
+                match layout[position.y][position.x] {
+                    '.' => {}
+                    '|' => match position.dir {
+                        Dir::N | Dir::S => {}
+                        Dir::E | Dir::W => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::S,
+                            });
+
+                            position.dir = Dir::N;
+                        }
+                    },
+                    '-' => match position.dir {
+                        Dir::E | Dir::W => {}
+                        Dir::N | Dir::S => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::W,
+                            });
+
+                            position.dir = Dir::E;
+                        }
+                    },
+                    '\\' => match position.dir {
+                        Dir::E => position.dir = Dir::S,
+                        Dir::W => position.dir = Dir::N,
+                        Dir::S => position.dir = Dir::E,
+                        Dir::N => position.dir = Dir::W,
+                    },
+                    '/' => match position.dir {
+                        Dir::E => position.dir = Dir::N,
+                        Dir::W => position.dir = Dir::S,
+                        Dir::S => position.dir = Dir::W,
+                        Dir::N => position.dir = Dir::E,
+                    },
+                    _ => unreachable!("Invalid layout piece found!"),
+                };
+
+                if let Err(_) = position.get_next(height, width) {
+                    break;
+                };
+            }
+        }
+
+        if seen.len() > max {
+            max = seen.len();
+        }
+    }
+
+    for y in 0..height {
+        let mut splits = vec![Position {
+            x: 0,
+            y,
+            dir: Dir::E,
+        }];
+        let mut seen = HashSet::new();
+        let mut split_starts = HashSet::new();
+        while splits.len() > 0 {
+            let mut position = splits.pop().unwrap();
+            if !split_starts.insert(position.clone()) {
+                continue;
+            }
+            loop {
+                seen.insert((position.x, position.y));
+                match layout[position.y][position.x] {
+                    '.' => {}
+                    '|' => match position.dir {
+                        Dir::N | Dir::S => {}
+                        Dir::E | Dir::W => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::S,
+                            });
+
+                            position.dir = Dir::N;
+                        }
+                    },
+                    '-' => match position.dir {
+                        Dir::E | Dir::W => {}
+                        Dir::N | Dir::S => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::W,
+                            });
+
+                            position.dir = Dir::E;
+                        }
+                    },
+                    '\\' => match position.dir {
+                        Dir::E => position.dir = Dir::S,
+                        Dir::W => position.dir = Dir::N,
+                        Dir::S => position.dir = Dir::E,
+                        Dir::N => position.dir = Dir::W,
+                    },
+                    '/' => match position.dir {
+                        Dir::E => position.dir = Dir::N,
+                        Dir::W => position.dir = Dir::S,
+                        Dir::S => position.dir = Dir::W,
+                        Dir::N => position.dir = Dir::E,
+                    },
+                    _ => unreachable!("Invalid layout piece found!"),
+                };
+
+                if let Err(_) = position.get_next(height, width) {
+                    break;
+                };
+            }
+        }
+
+        if seen.len() > max {
+            max = seen.len();
+        }
+    }
+
+    for y in 0..height {
+        let mut splits = vec![Position {
+            x: width - 1,
+            y,
+            dir: Dir::W,
+        }];
+        let mut seen = HashSet::new();
+        let mut split_starts = HashSet::new();
+        while splits.len() > 0 {
+            let mut position = splits.pop().unwrap();
+            if !split_starts.insert(position.clone()) {
+                continue;
+            }
+            loop {
+                seen.insert((position.x, position.y));
+                match layout[position.y][position.x] {
+                    '.' => {}
+                    '|' => match position.dir {
+                        Dir::N | Dir::S => {}
+                        Dir::E | Dir::W => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::S,
+                            });
+
+                            position.dir = Dir::N;
+                        }
+                    },
+                    '-' => match position.dir {
+                        Dir::E | Dir::W => {}
+                        Dir::N | Dir::S => {
+                            splits.push(Position {
+                                x: position.x,
+                                y: position.y,
+                                dir: Dir::W,
+                            });
+
+                            position.dir = Dir::E;
+                        }
+                    },
+                    '\\' => match position.dir {
+                        Dir::E => position.dir = Dir::S,
+                        Dir::W => position.dir = Dir::N,
+                        Dir::S => position.dir = Dir::E,
+                        Dir::N => position.dir = Dir::W,
+                    },
+                    '/' => match position.dir {
+                        Dir::E => position.dir = Dir::N,
+                        Dir::W => position.dir = Dir::S,
+                        Dir::S => position.dir = Dir::W,
+                        Dir::N => position.dir = Dir::E,
+                    },
+                    _ => unreachable!("Invalid layout piece found!"),
+                };
+
+                if let Err(_) = position.get_next(height, width) {
+                    break;
+                };
+            }
+        }
+
+        if seen.len() > max {
+            max = seen.len();
+        }
+    }
+
+    println!("{max}");
 
     Ok(())
 }
