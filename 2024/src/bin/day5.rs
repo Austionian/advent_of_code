@@ -50,7 +50,7 @@ fn parse_map_and_updates() -> (HashMap<usize, Vec<usize>>, &'static str) {
     (map, updates)
 }
 
-fn is_valid(map: &HashMap<usize, Vec<usize>>, update: &Vec<usize>) -> bool {
+fn is_valid(map: &HashMap<usize, Vec<usize>>, update: &[usize]) -> bool {
     let mut key = None;
     let mut valid = true;
 
@@ -58,19 +58,17 @@ fn is_valid(map: &HashMap<usize, Vec<usize>>, update: &Vec<usize>) -> bool {
         if key.is_none() {
             key = Some(v);
             continue;
-        } else {
-            if let Some(rule) = map.get(key.unwrap()) {
-                if rule.contains(v) {
-                    key = Some(v);
-                    continue;
-                } else {
-                    valid = false;
-                    break;
-                }
+        } else if let Some(rule) = map.get(key.unwrap()) {
+            if rule.contains(v) {
+                key = Some(v);
+                continue;
             } else {
                 valid = false;
                 break;
             }
+        } else {
+            valid = false;
+            break;
         }
     }
 
@@ -78,7 +76,7 @@ fn is_valid(map: &HashMap<usize, Vec<usize>>, update: &Vec<usize>) -> bool {
 }
 
 fn find_next(map: &HashMap<usize, Vec<usize>>, key: &Option<&usize>, value: usize) -> usize {
-    if let Some(rule) = map.get(&key.unwrap()) {
+    if let Some(rule) = map.get(key.unwrap()) {
         if rule.contains(&value) {
             return *key.unwrap();
         }
@@ -87,7 +85,7 @@ fn find_next(map: &HashMap<usize, Vec<usize>>, key: &Option<&usize>, value: usiz
 }
 
 fn fix(update: &Vec<usize>, map: &HashMap<usize, Vec<usize>>) -> Vec<usize> {
-    if is_valid(map, &update) {
+    if is_valid(map, update) {
         return update.clone();
     };
 
