@@ -2,7 +2,7 @@ fn check(line: &[usize]) -> bool {
     (line.is_sorted() || line.iter().rev().is_sorted())
         && line.windows(2).fold(true, |good, window| {
             let dif = window[0].abs_diff(window[1]);
-            good && (1 <= dif && dif <= 3)
+            good && (1..=3).contains(&dif)
         })
 }
 

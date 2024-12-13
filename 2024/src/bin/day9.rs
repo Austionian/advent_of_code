@@ -1,6 +1,4 @@
-use std::str::FromStr;
-
-const TEST: &'static str = "2333133121414131402";
+//const TEST: &'static str = "2333133121414131402";
 
 fn part_one(input: &str) -> usize {
     let mut inp = input.trim().to_owned();
@@ -41,7 +39,7 @@ fn part_one(input: &str) -> usize {
         if let Some(v) = ch {
             output.push(*v);
         } else {
-            while *blocks.iter().nth_back(ring_pointer).unwrap() == None {
+            while blocks.iter().nth_back(ring_pointer).unwrap().is_none() {
                 ring_pointer += 1;
             }
             let v = blocks.iter().nth_back(ring_pointer).unwrap().unwrap();
@@ -78,18 +76,16 @@ fn part_two(input: &str) -> usize {
                 unreachable!("we made the input even!");
             };
 
-            let mut new = Vec::new();
-            new.push(Mem {
-                value: Some(id),
-                len: file_size.to_digit(10).unwrap(),
-            });
-
-            new.push(Mem {
-                value: None,
-                len: free_space.to_digit(10).unwrap(),
-            });
-
-            new
+            vec![
+                Mem {
+                    value: Some(id),
+                    len: file_size.to_digit(10).unwrap(),
+                },
+                Mem {
+                    value: None,
+                    len: free_space.to_digit(10).unwrap(),
+                },
+            ]
         })
         .collect::<Vec<_>>();
 
@@ -125,7 +121,9 @@ fn part_two(input: &str) -> usize {
             if m.len == mem.len {
                 m.value = mem.value;
 
-                output.get_mut(to_rm).map(|m| m.value = None);
+                if let Some(v) = output.get_mut(to_rm) {
+                    v.value = None;
+                }
             } else {
                 let update_and_dup = output
                     .iter()
@@ -146,8 +144,9 @@ fn part_two(input: &str) -> usize {
                         },
                     );
 
-                    let outgoing = output.get_mut(to_rm + 1);
-                    outgoing.unwrap().value = None;
+                    if let Some(v) = output.get_mut(to_rm + 1) {
+                        v.value = None;
+                    }
                 }
             }
         }

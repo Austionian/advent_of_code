@@ -15,8 +15,8 @@ fn mul_parser() -> usize {
                     for _ in 0..3 {
                         if let Some(ch) = iter.next() {
                             match ch {
-                                '0'..'9' => x.push_str(&ch.to_string()),
-                                '9' => x.push_str("9"),
+                                '0'..'9' => x.push(ch),
+                                '9' => x.push('9'),
                                 ',' => {
                                     comma = true;
                                     break;
@@ -34,8 +34,7 @@ fn mul_parser() -> usize {
                         for _ in 0..3 {
                             if let Some(ch) = iter.next() {
                                 match ch {
-                                    '0'..'9' => y.push_str(&ch.to_string()),
-                                    '9' => y.push_str("9"),
+                                    '0'..='9' => y.push(ch),
                                     ')' => {
                                         ending_paren = true;
                                         break;

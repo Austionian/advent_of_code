@@ -1,8 +1,8 @@
 fn is_xmas(slice: &[char]) -> bool {
-    slice == &['X', 'M', 'A', 'S'] || slice == &['S', 'A', 'M', 'X']
+    slice == ['X', 'M', 'A', 'S'] || slice == ['S', 'A', 'M', 'X']
 }
 
-fn char_check(line: &Vec<char>) -> usize {
+fn char_check(line: &[char]) -> usize {
     line.windows(4)
         .fold(0, |acc, slice| if is_xmas(slice) { acc + 1 } else { acc })
 }
@@ -24,7 +24,7 @@ fn get_vertical_slices(input: &str, width: usize) -> Vec<Vec<char>> {
 }
 
 fn find_next(
-    chars: &Vec<Vec<char>>,
+    chars: &[Vec<char>],
     ch: char,
     x: usize,
     y: usize,
@@ -72,12 +72,11 @@ fn get_diagonals(input: &str, width: usize, height: usize) -> usize {
         for j in 0..height {
             if chars[i][j] == 'X' {
                 for check in checks {
-                    if find_next(&chars, 'M', i, j, check, height, width, 1) {
-                        if find_next(&chars, 'A', i, j, check, height, width, 2) {
-                            if find_next(&chars, 'S', i, j, check, height, width, 3) {
-                                found += 1;
-                            }
-                        }
+                    if find_next(&chars, 'M', i, j, check, height, width, 1)
+                        && find_next(&chars, 'A', i, j, check, height, width, 2)
+                        && find_next(&chars, 'S', i, j, check, height, width, 3)
+                    {
+                        found += 1;
                     }
                 }
             }
@@ -88,7 +87,7 @@ fn get_diagonals(input: &str, width: usize, height: usize) -> usize {
 }
 
 fn find_x(
-    chars: &Vec<Vec<char>>,
+    chars: &[Vec<char>],
     x: usize,
     y: usize,
     check: (isize, isize),
@@ -130,10 +129,11 @@ fn get_xes(input: &str, width: usize, height: usize) -> usize {
                     }
                 }
 
-                if m.len() == 2 && s.len() == 2 {
-                    if m.iter().fold(0, |acc, tup| acc + tup.0 + tup.1) != 0 {
-                        found += 1;
-                    }
+                if m.len() == 2
+                    && s.len() == 2
+                    && m.iter().fold(0, |acc, tup| acc + tup.0 + tup.1) != 0
+                {
+                    found += 1;
                 }
             }
         }
